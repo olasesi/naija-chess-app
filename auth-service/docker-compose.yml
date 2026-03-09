@@ -1,0 +1,68 @@
+version: "3.9"
+
+services:
+  auth-service:
+    build:
+      context: .
+      target: builder # Use builder stage in dev (has ts-node-dev)
+    container_name: auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=mysql://root:rootpassword@mysql:3306/gameplatform_auth
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src # Hot reload in dev
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - platform-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: platform-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_auth
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: platform-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  platform-network:
+    driver: bridge

@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String?   // null for OAuth-only users
+  googleId      String?   @unique
+  avatar        String?
+  role          Role      @default(PLAYER)
+  isVerified    Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  rating        Int       @default(1200)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+  @@index([googleId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  isRevoked Boolean  @default(false)
+  ipAddress String?
+  userAgent String?
+
+  @@index([token])
+  @@index([userId])
+}
+
+enum Role {
+  PLAYER
+  MODERATOR
+  ADMIN
+}
