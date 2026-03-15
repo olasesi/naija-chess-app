@@ -1,5 +1,5 @@
-import Redis from 'ioredis';
-import { env } from './env';
+import Redis from "ioredis";
+import { env } from "./env";
 
 export const redis = new Redis({
   host: env.REDIS_HOST,
@@ -13,8 +13,8 @@ export const redis = new Redis({
   maxRetriesPerRequest: 3,
 });
 
-redis.on('connect', () => console.log('✅ Redis connected'));
-redis.on('error', (err) => console.error('❌ Redis error:', err));
+redis.on("connect", () => console.log("✅ Redis connected"));
+redis.on("error", (err) => console.error("❌ Redis error:", err));
 
 // Key helpers — centralised so keys are never mistyped across services
 export const RedisKeys = {

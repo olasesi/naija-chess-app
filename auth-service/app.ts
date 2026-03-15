@@ -3,13 +3,13 @@ import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
-import { env } from "./config/env";
-import { connectDB, disconnectDB } from "./config/db";
-import { redis } from "./config/redis";
-import { generalRateLimiter } from "./middlewares/rate-limit";
-import { sendError } from "./utils/response";
-import { logger } from "./utils/logger";
-import authRoutes from "./routes/auth.routes";
+import { env } from "./src/config/env";
+import { connectDB, disconnectDB } from "./src/config/db";
+import { redis } from "./src/config/redis";
+import { generalRateLimiter } from "./src/middlewares/rate-limit";
+import { sendError } from "./src/utils/response";
+import { logger } from "./src/utils/logger";
+import authRoutes from "./src/routes/auth.routes";
 
 const app = express();
 
