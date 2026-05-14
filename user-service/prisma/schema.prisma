@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model UserProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  displayName String?
+  bio         String?
+  avatar      String?
+  country     String?
+  title       String?  @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stats        UserStats?
+  preferences  UserPreference?
+  sentRequests   Friend[] @relation("SentRequests")
+  receivedRequests Friend[] @relation("ReceivedRequests")
+
+  @@index([userId])
+  @@index([displayName])
+}
+
+model UserStats {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  profile        UserProfile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  gamesPlayed    Int      @default(0)
+  wins           Int      @default(0)
+  losses         Int      @default(0)
+  draws          Int      @default(0)
+  winStreak      Int      @default(0)
+  bestWinStreak  Int      @default(0)
+  bulletRating   Int      @default(1200)
+  blitzRating    Int      @default(1200)
+  rapidRating    Int      @default(1200)
+  classicalRating Int     @default(1200)
+  puzzleRating   Int      @default(1200)
+  puzzleRatingMax Int     @default(1200)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Friend {
+  id        String       @id @default(uuid())
+  userId    String
+  friendId  String
+  status    FriendStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  sender   UserProfile @relation("SentRequests", fields: [userId], references: [userId], onDelete: Cascade)
+  receiver UserProfile @relation("ReceivedRequests", fields: [friendId], references: [userId], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+  @@index([status])
+}
+
+model UserPreference {
+  id            String  @id @default(uuid())
+  userId        String  @unique
+  profile       UserProfile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  theme         String  @default("dark")
+  boardStyle    String  @default("classic")
+  pieceStyle    String  @default("standard")
+  soundEnabled  Boolean @default(true)
+  showAnalysis  Boolean @default(true)
+  autoPromote   Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}

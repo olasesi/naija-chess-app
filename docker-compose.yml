@@ -1,0 +1,143 @@
+version: "3.9"
+
+services:
+  # ─── API Gateway ────────────────────────────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./api-gateway
+      target: builder
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - USER_SERVICE_URL=http://user-service:3002
+      - GAME_SERVICE_URL=http://game-service:3003
+      - CLIENT_URL=http://localhost:5173
+    volumes:
+      - ./api-gateway/src:/app/src
+    depends_on:
+      - auth-service
+      - user-service
+    command: npm run dev
+    networks:
+      - platform-network
+
+  # ─── Auth Service ───────────────────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./auth-service
+      target: builder
+    container_name: auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=mysql://root:rootpassword@mysql-auth:3306/gameplatform_auth
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    env_file:
+      - ./auth-service/.env
+    volumes:
+      - ./auth-service/src:/app/src
+    depends_on:
+      mysql-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - platform-network
+
+  # ─── User Service ───────────────────────────────────────────────────────────
+  user-service:
+    build:
+      context: ./user-service
+      target: builder
+    container_name: user-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=mysql://root:rootpassword@mysql-user:3306/gameplatform_users
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+    env_file:
+      - ./user-service/.env
+    volumes:
+      - ./user-service/src:/app/src
+      - ./user-service/uploads:/app/uploads
+    depends_on:
+      mysql-user:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - platform-network
+
+  # ─── MySQL: Auth ────────────────────────────────────────────────────────────
+  mysql-auth:
+    image: mysql:8.0
+    container_name: mysql-auth
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_auth
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_auth_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── MySQL: User ────────────────────────────────────────────────────────────
+  mysql-user:
+    image: mysql:8.0
+    container_name: mysql-user
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_users
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_user_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: platform-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+volumes:
+  mysql_auth_data:
+  mysql_user_data:
+  redis_data:
+
+networks:
+  platform-network:
+    driver: bridge
