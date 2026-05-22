@@ -25,27 +25,30 @@ spec:
         - name: user-service
           image: your-registry/user-service:latest
           ports:
-            - containerPort: 3002
+            - containerPort: 8000
           envFrom:
             - secretRef:
                 name: user-service-secrets
+          env:
+            - name: DJANGO_SETTINGS_MODULE
+              value: config.settings.production
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
               memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
               cpu: "500m"
           livenessProbe:
             httpGet:
-              path: /health
-              port: 3002
+              path: /health/
+              port: 8000
             initialDelaySeconds: 15
             periodSeconds: 20
           readinessProbe:
             httpGet:
-              path: /health
-              port: 3002
+              path: /health/
+              port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
 ---
@@ -60,7 +63,7 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 3002
+      targetPort: 8000
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

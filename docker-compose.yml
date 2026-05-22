@@ -13,14 +13,16 @@ services:
       - NODE_ENV=development
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
       - AUTH_SERVICE_URL=http://auth-service:3001
-      - USER_SERVICE_URL=http://user-service:3002
+      - USER_SERVICE_URL=http://user-service:8000
       - GAME_SERVICE_URL=http://game-service:3003
+      - RATING_SERVICE_URL=http://rating-service:8001
       - CLIENT_URL=http://localhost:5173
     volumes:
       - ./api-gateway/src:/app/src
     depends_on:
       - auth-service
       - user-service
+      - game-service
     command: npm run dev
     networks:
       - platform-network
@@ -51,31 +53,32 @@ services:
     networks:
       - platform-network
 
-  # ─── User Service ───────────────────────────────────────────────────────────
+  # ─── User Service (Django) ────────────────────────────────────────────────────
   user-service:
     build:
       context: ./user-service
       target: builder
     container_name: user-service
     ports:
-      - "3002:3002"
+      - "8000:8000"
     environment:
-      - NODE_ENV=development
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DEBUG=True
       - DATABASE_URL=mysql://root:rootpassword@mysql-user:3306/gameplatform_users
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_URL=redis://redis:6379/1
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
-    env_file:
-      - ./user-service/.env
+      - CELERY_BROKER_URL=redis://redis:6379/2
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+      - AUTH_SERVICE_URL=http://auth-service:3001
     volumes:
-      - ./user-service/src:/app/src
-      - ./user-service/uploads:/app/uploads
+      - ./user-service:/app
     depends_on:
       mysql-user:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: npm run dev
+    command: python manage.py runserver 0.0.0.0:8000
     networks:
       - platform-network
 
@@ -117,6 +120,98 @@ services:
     networks:
       - platform-network
 
+  # ─── Game Service (Node + Socket.io) ─────────────────────────────────────────
+  game-service:
+    build:
+      context: ./game-service
+      target: builder
+    container_name: game-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/gameplatform_games
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - USER_SERVICE_URL=http://user-service:8000
+      - RATING_SERVICE_URL=http://rating-service:8001
+      - CLIENT_URL=http://localhost:5173
+    volumes:
+      - ./game-service/src:/app/src
+    depends_on:
+      - rating-service
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - platform-network
+
+  # ─── Rating Service (Django + Glicko-2) ──────────────────────────────────────
+  rating-service:
+    build:
+      context: ./rating-service
+      target: builder
+    container_name: rating-service
+    ports:
+      - "8001:8001"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DEBUG=True
+      - DATABASE_URL=mysql://root:rootpassword@mysql-rating:3306/gameplatform_ratings
+      - REDIS_URL=redis://redis:6379/3
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/4
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+    volumes:
+      - ./rating-service:/app
+    depends_on:
+      mysql-rating:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8001
+    networks:
+      - platform-network
+
+  # ─── MySQL: Rating ───────────────────────────────────────────────────────────
+  mysql-rating:
+    image: mysql:8.0
+    container_name: mysql-rating
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_ratings
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_rating_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── MongoDB ─────────────────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: platform-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
   # ─── Redis ──────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
@@ -136,6 +231,8 @@ services:
 volumes:
   mysql_auth_data:
   mysql_user_data:
+  mysql_rating_data:
+  mongodb_data:
   redis_data:
 
 networks:

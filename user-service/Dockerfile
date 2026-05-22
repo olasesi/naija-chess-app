@@ -1,32 +1,39 @@
-FROM node:20-alpine AS builder
+FROM python:3.12-slim AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY tsconfig.json ./
-COPY prisma ./prisma/
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libmariadb-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN npm ci
+COPY requirements/ ./requirements/
+RUN pip install --no-cache-dir --user -r requirements/production.txt
 
-COPY src ./src
+COPY . .
 
-RUN npm run prisma:generate
-RUN npm run build
-
-FROM node:20-alpine AS production
+FROM python:3.12-slim AS production
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --only=production
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libmariadb-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY prisma ./prisma
+COPY --from=builder /root/.local /root/.local
+COPY --from=builder /app .
 
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-USER nodejs
+ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-EXPOSE 3002
+RUN useradd -m -u 1001 appuser && chown -R appuser:appuser /app
+USER appuser
 
-CMD ["node", "dist/app.js"]
+EXPOSE 8000
+
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--threads", "2", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-"]

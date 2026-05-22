@@ -11,6 +11,7 @@ const envSchema = z.object({
   AUTH_SERVICE_URL: z.string().default("http://auth-service:3001"),
   USER_SERVICE_URL: z.string().default("http://user-service:3002"),
   GAME_SERVICE_URL: z.string().default("http://game-service:3003"),
+  RATING_SERVICE_URL: z.string().default("http://rating-service:8001"),
 
   // App
   CLIENT_URL: z.string().default("http://localhost:5173"),

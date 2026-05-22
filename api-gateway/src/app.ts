@@ -1,4 +1,5 @@
 import express from "express";
+import http from "http";
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
@@ -11,6 +12,7 @@ import { sendError } from "./utils/response";
 import { logger } from "./utils/logger";
 
 const app = express();
+const httpServer = http.createServer(app);
 
 // ─── Security Middleware ──────────────────────────────────────────────────────
 app.use(helmet());
@@ -32,23 +34,27 @@ app.set("trust proxy", 1);
 
 // ─── Proxy Setup ──────────────────────────────────────────────────────────────
 function setupProxy(route: RouteConfig): void {
+  const isWebSocket = route.path === "/api/games";
+
   const proxyOptions: Options = {
     target: route.target,
     changeOrigin: true,
     proxyTimeout: 30000,
     timeout: 30000,
+    ws: isWebSocket,  // Enable WebSocket proxying for game service (Socket.IO)
 
     on: {
       proxyReq: (proxyReq, req) => {
         logger.debug(`Proxying ${req.method} ${req.originalUrl} -> ${route.target}`);
       },
       proxyRes: (proxyRes, req) => {
-        // Strip security headers from upstream — gateway sets its own
         delete proxyRes.headers["x-powered-by"];
       },
       error: (err, req, res) => {
         logger.error(`Proxy error for ${req.originalUrl}:`, err);
-        sendError(res, "Service unavailable", 503);
+        if (!res.headersSent) {
+          sendError(res, "Service unavailable", 503);
+        }
       },
     },
   };
@@ -79,6 +85,21 @@ for (const route of routes) {
   setupProxy(route);
   logger.info(`Route registered: ${route.path} -> ${route.target}`);
 }
+
+// ─── WebSocket Upgrade (for Socket.IO / game-service) ─────────────────────────
+httpServer.on("upgrade", (req, socket, head) => {
+  const gameRoute = routes.find((r) => req.url?.startsWith(r.path));
+  if (gameRoute) {
+    const proxy = createProxyMiddleware({
+      target: gameRoute.target,
+      changeOrigin: true,
+      ws: true,
+    });
+    proxy.upgrade(req, socket, head);
+  } else {
+    socket.destroy();
+  }
+});
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get("/health", (_req, res) => {
@@ -111,13 +132,13 @@ app.use(
 const PORT = parseInt(env.PORT);
 
 async function start() {
-  const server = app.listen(PORT, () => {
+  httpServer.listen(PORT, () => {
     logger.info(`API Gateway running on port ${PORT} [${env.NODE_ENV}]`);
   });
 
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received — shutting down gracefully`);
-    server.close(() => {
+    httpServer.close(() => {
       logger.info("API Gateway shut down");
       process.exit(0);
     });
@@ -132,4 +153,4 @@ start().catch((err) => {
   process.exit(1);
 });
 
-export default app;
+export { app, httpServer };

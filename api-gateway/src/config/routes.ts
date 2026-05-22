@@ -26,10 +26,16 @@ export const routes: RouteConfig[] = [
     path: "/api/users",
     target: env.USER_SERVICE_URL,
     auth: true,
+    // Django user-service on :8000
   },
   {
     path: "/api/games",
     target: env.GAME_SERVICE_URL,
+    auth: true,
+  },
+  {
+    path: "/api/ratings",
+    target: env.RATING_SERVICE_URL,
     auth: true,
   },
 ];
