@@ -34,14 +34,12 @@ app.set("trust proxy", 1);
 
 // ─── Proxy Setup ──────────────────────────────────────────────────────────────
 function setupProxy(route: RouteConfig): void {
-  const isWebSocket = route.path === "/api/games";
-
   const proxyOptions: Options = {
     target: route.target,
     changeOrigin: true,
     proxyTimeout: 30000,
     timeout: 30000,
-    ws: isWebSocket,  // Enable WebSocket proxying for game service (Socket.IO)
+    ws: route.ws,  // Enable WebSocket proxying for Socket.IO services
 
     on: {
       proxyReq: (proxyReq, req) => {

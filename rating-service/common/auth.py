@@ -4,6 +4,18 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
 
+class AuthUser:
+    def __init__(self, user_id, email, role):
+        self.id = user_id
+        self.pk = user_id
+        self.email = email
+        self.role = role
+        self.is_authenticated = True
+
+    def __str__(self):
+        return self.id
+
+
 class GatewayJWTAuthentication(BaseAuthentication):
     def authenticate(self, request):
         user_id = request.headers.get("X-User-Id")
@@ -11,7 +23,7 @@ class GatewayJWTAuthentication(BaseAuthentication):
         user_role = request.headers.get("X-User-Role")
 
         if user_id and user_email and user_role:
-            return self._build_user(user_id, user_email, user_role), None
+            return AuthUser(user_id, user_email, user_role), None
 
         return self._authenticate_jwt(request)
 
@@ -26,14 +38,4 @@ class GatewayJWTAuthentication(BaseAuthentication):
             raise AuthenticationFailed("Token expired")
         except jwt.InvalidTokenError:
             raise AuthenticationFailed("Invalid token")
-        return self._build_user(payload.get("sub"), payload.get("email"), payload.get("role", "PLAYER")), None
-
-    def _build_user(self, user_id, email, role):
-        from django.contrib.auth.models import AnonymousUser
-        u = AnonymousUser()
-        u.id = user_id
-        u.pk = user_id
-        u.email = email
-        u.role = role
-        u.is_authenticated = True
-        return u
+        return AuthUser(payload.get("sub"), payload.get("email"), payload.get("role", "PLAYER")), None

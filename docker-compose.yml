@@ -16,6 +16,9 @@ services:
       - USER_SERVICE_URL=http://user-service:8000
       - GAME_SERVICE_URL=http://game-service:3003
       - RATING_SERVICE_URL=http://rating-service:8001
+      - ANALYSIS_SERVICE_URL=http://analysis-service:8002
+      - CHAT_SERVICE_URL=http://chat-service:3004
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8003
       - CLIENT_URL=http://localhost:5173
     volumes:
       - ./api-gateway/src:/app/src
@@ -23,6 +26,8 @@ services:
       - auth-service
       - user-service
       - game-service
+      - rating-service
+      - chat-service
     command: npm run dev
     networks:
       - platform-network
@@ -196,6 +201,129 @@ services:
     networks:
       - platform-network
 
+  # ─── Analysis Service (Django + Stockfish) ────────────────────────────────────
+  analysis-service:
+    build:
+      context: ./analysis-service
+      target: builder
+    container_name: analysis-service
+    ports:
+      - "8002:8002"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DEBUG=True
+      - DATABASE_URL=mysql://root:rootpassword@mysql-analysis:3306/gameplatform_analysis
+      - REDIS_URL=redis://redis:6379/5
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/6
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+      - STOCKFISH_PATH=/usr/games/stockfish
+    volumes:
+      - ./analysis-service:/app
+    depends_on:
+      mysql-analysis:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8002
+    networks:
+      - platform-network
+
+  # ─── MySQL: Analysis ────────────────────────────────────────────────────────
+  mysql-analysis:
+    image: mysql:8.0
+    container_name: mysql-analysis
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_analysis
+    ports:
+      - "3310:3306"
+    volumes:
+      - mysql_analysis_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Chat Service (Node + Socket.IO + MongoDB) ────────────────────────────────
+  chat-service:
+    build:
+      context: ./chat-service
+    container_name: chat-service
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+      - PORT=3004
+      - MONGODB_URI=mongodb://mongodb:27017/chess_chat
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - USER_SERVICE_URL=http://user-service:8000
+      - GAME_SERVICE_URL=http://game-service:3003
+      - CLIENT_URL=http://localhost:5173
+    volumes:
+      - ./chat-service/src:/app/src
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - platform-network
+
+  # ─── Notification Service (Django + FCM push) ─────────────────────────────────
+  notification-service:
+    build:
+      context: ./notification-service
+      target: builder
+    container_name: notification-service
+    ports:
+      - "8003:8003"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DEBUG=True
+      - DATABASE_URL=mysql://root:rootpassword@mysql-notification:3306/gameplatform_notifications
+      - REDIS_URL=redis://redis:6379/7
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/8
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+    volumes:
+      - ./notification-service:/app
+    depends_on:
+      mysql-notification:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8003
+    networks:
+      - platform-network
+
+  # ─── MySQL: Notification ──────────────────────────────────────────────────────
+  mysql-notification:
+    image: mysql:8.0
+    container_name: mysql-notification
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_notifications
+    ports:
+      - "3311:3306"
+    volumes:
+      - mysql_notification_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
   # ─── MongoDB ─────────────────────────────────────────────────────────────────
   mongodb:
     image: mongo:7
@@ -232,8 +360,10 @@ volumes:
   mysql_auth_data:
   mysql_user_data:
   mysql_rating_data:
+  mysql_analysis_data:
   mongodb_data:
   redis_data:
+  mysql_notification_data:
 
 networks:
   platform-network:

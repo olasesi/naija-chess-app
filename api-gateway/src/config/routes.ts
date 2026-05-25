@@ -5,6 +5,7 @@ export interface RouteConfig {
   target: string;
   auth: boolean;
   publicPaths?: string[];  // sub-paths that don't require auth
+  ws?: boolean;  // supports WebSocket upgrade
 }
 
 // Routes that should bypass JWT verification (auth service handles its own)
@@ -32,10 +33,27 @@ export const routes: RouteConfig[] = [
     path: "/api/games",
     target: env.GAME_SERVICE_URL,
     auth: true,
+    ws: true,
   },
   {
     path: "/api/ratings",
     target: env.RATING_SERVICE_URL,
+    auth: true,
+  },
+  {
+    path: "/api/analysis",
+    target: env.ANALYSIS_SERVICE_URL,
+    auth: true,
+  },
+  {
+    path: "/api/chat",
+    target: env.CHAT_SERVICE_URL,
+    auth: true,
+    ws: true,
+  },
+  {
+    path: "/api/notifications",
+    target: env.NOTIFICATION_SERVICE_URL,
     auth: true,
   },
 ];
