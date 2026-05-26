@@ -19,6 +19,9 @@ services:
       - ANALYSIS_SERVICE_URL=http://analysis-service:8002
       - CHAT_SERVICE_URL=http://chat-service:3004
       - NOTIFICATION_SERVICE_URL=http://notification-service:8003
+      - TOURNAMENT_SERVICE_URL=http://tournament-service:8004
+      - FORUM_SERVICE_URL=http://forum-service:8005
+      - ADMIN_SERVICE_URL=http://admin-service:8006
       - CLIENT_URL=http://localhost:5173
     volumes:
       - ./api-gateway/src:/app/src
@@ -324,6 +327,143 @@ services:
     networks:
       - platform-network
 
+  # ─── Tournament Service (Django + Swiss / Round-Robin) ──────────────────────────
+  tournament-service:
+    build:
+      context: ./tournament-service
+      target: builder
+    container_name: tournament-service
+    ports:
+      - "8004:8004"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DEBUG=True
+      - DATABASE_URL=mysql://root:rootpassword@mysql-tournament:3306/gameplatform_tournaments
+      - REDIS_URL=redis://redis:6379/9
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/10
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+    volumes:
+      - ./tournament-service:/app
+    depends_on:
+      mysql-tournament:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8004
+    networks:
+      - platform-network
+
+  # ─── MySQL: Tournament ──────────────────────────────────────────────────────────
+  mysql-tournament:
+    image: mysql:8.0
+    container_name: mysql-tournament
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_tournaments
+    ports:
+      - "3312:3306"
+    volumes:
+      - mysql_tournament_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Forum/Blog Service (Laravel + MySQL) ──────────────────────────────────────
+  forum-service:
+    build:
+      context: ./forum-service
+    container_name: forum-service
+    ports:
+      - "8005:8005"
+    environment:
+      - APP_ENV=development
+      - APP_DEBUG=true
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql-forum
+      - DB_PORT=3306
+      - DB_DATABASE=gameplatform_forum
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+    volumes:
+      - ./forum-service:/app
+    depends_on:
+      mysql-forum:
+        condition: service_healthy
+    command: php artisan serve --host=0.0.0.0 --port=8005
+    networks:
+      - platform-network
+
+  # ─── MySQL: Forum ───────────────────────────────────────────────────────────────
+  mysql-forum:
+    image: mysql:8.0
+    container_name: mysql-forum
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_forum
+    ports:
+      - "3313:3306"
+    volumes:
+      - mysql_forum_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Admin Dashboard Service (Laravel + MySQL) ─────────────────────────────────
+  admin-service:
+    build:
+      context: ./admin-service
+    container_name: admin-service
+    ports:
+      - "8006:8006"
+    environment:
+      - APP_ENV=development
+      - APP_DEBUG=true
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql-admin
+      - DB_PORT=3306
+      - DB_DATABASE=gameplatform_admin
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+    volumes:
+      - ./admin-service:/app
+    depends_on:
+      mysql-admin:
+        condition: service_healthy
+    command: php artisan serve --host=0.0.0.0 --port=8006
+    networks:
+      - platform-network
+
+  # ─── MySQL: Admin ───────────────────────────────────────────────────────────────
+  mysql-admin:
+    image: mysql:8.0
+    container_name: mysql-admin
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_admin
+    ports:
+      - "3314:3306"
+    volumes:
+      - mysql_admin_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
   # ─── MongoDB ─────────────────────────────────────────────────────────────────
   mongodb:
     image: mongo:7
@@ -364,6 +504,9 @@ volumes:
   mongodb_data:
   redis_data:
   mysql_notification_data:
+  mysql_tournament_data:
+  mysql_forum_data:
+  mysql_admin_data:
 
 networks:
   platform-network:

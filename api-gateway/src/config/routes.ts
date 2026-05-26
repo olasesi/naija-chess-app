@@ -56,4 +56,19 @@ export const routes: RouteConfig[] = [
     target: env.NOTIFICATION_SERVICE_URL,
     auth: true,
   },
+  {
+    path: "/api/tournaments",
+    target: env.TOURNAMENT_SERVICE_URL,
+    auth: true,
+  },
+  {
+    path: "/api/forum",
+    target: env.FORUM_SERVICE_URL,
+    auth: true,
+  },
+  {
+    path: "/api/admin",
+    target: env.ADMIN_SERVICE_URL,
+    auth: true,
+  },
 ];
