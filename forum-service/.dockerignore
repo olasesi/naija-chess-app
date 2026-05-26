@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+.env
+.env.example
+.git
+node_modules
+vendor
+storage
+*.log
+.dockerignore
+Dockerfile

@@ -1,0 +1,7 @@
+.env
+vendor/
+node_modules/
+storage/framework/views/*.php
+storage/logs/*.log
+.git/
+.github/
