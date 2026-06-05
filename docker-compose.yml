@@ -1,0 +1,513 @@
+version: "3.9"
+
+services:
+  # ─── API Gateway ────────────────────────────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./api-gateway
+      target: builder
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - USER_SERVICE_URL=http://user-service:8000
+      - GAME_SERVICE_URL=http://game-service:3003
+      - RATING_SERVICE_URL=http://rating-service:8001
+      - ANALYSIS_SERVICE_URL=http://analysis-service:8002
+      - CHAT_SERVICE_URL=http://chat-service:3004
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8003
+      - TOURNAMENT_SERVICE_URL=http://tournament-service:8004
+      - FORUM_SERVICE_URL=http://forum-service:8005
+      - ADMIN_SERVICE_URL=http://admin-service:8006
+      - CLIENT_URL=http://localhost:5173
+    volumes:
+      - ./api-gateway/src:/app/src
+    depends_on:
+      - auth-service
+      - user-service
+      - game-service
+      - rating-service
+      - chat-service
+    command: npm run dev
+    networks:
+      - platform-network
+
+  # ─── Auth Service ───────────────────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./auth-service
+      target: builder
+    container_name: auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=mysql://root:rootpassword@mysql-auth:3306/gameplatform_auth
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    env_file:
+      - ./auth-service/.env
+    volumes:
+      - ./auth-service/src:/app/src
+    depends_on:
+      mysql-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - platform-network
+
+  # ─── User Service (Django) ────────────────────────────────────────────────────
+  user-service:
+    build:
+      context: ./user-service
+      target: builder
+    container_name: user-service
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DEBUG=True
+      - DATABASE_URL=mysql://root:rootpassword@mysql-user:3306/gameplatform_users
+      - REDIS_URL=redis://redis:6379/1
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/2
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    volumes:
+      - ./user-service:/app
+    depends_on:
+      mysql-user:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8000
+    networks:
+      - platform-network
+
+  # ─── MySQL: Auth ────────────────────────────────────────────────────────────
+  mysql-auth:
+    image: mysql:8.0
+    container_name: mysql-auth
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_auth
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_auth_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── MySQL: User ────────────────────────────────────────────────────────────
+  mysql-user:
+    image: mysql:8.0
+    container_name: mysql-user
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_users
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_user_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Game Service (Node + Socket.io) ─────────────────────────────────────────
+  game-service:
+    build:
+      context: ./game-service
+      target: builder
+    container_name: game-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/gameplatform_games
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - USER_SERVICE_URL=http://user-service:8000
+      - RATING_SERVICE_URL=http://rating-service:8001
+      - CLIENT_URL=http://localhost:5173
+    volumes:
+      - ./game-service/src:/app/src
+    depends_on:
+      - rating-service
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - platform-network
+
+  # ─── Rating Service (Django + Glicko-2) ──────────────────────────────────────
+  rating-service:
+    build:
+      context: ./rating-service
+      target: builder
+    container_name: rating-service
+    ports:
+      - "8001:8001"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DEBUG=True
+      - DATABASE_URL=mysql://root:rootpassword@mysql-rating:3306/gameplatform_ratings
+      - REDIS_URL=redis://redis:6379/3
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/4
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+    volumes:
+      - ./rating-service:/app
+    depends_on:
+      mysql-rating:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8001
+    networks:
+      - platform-network
+
+  # ─── MySQL: Rating ───────────────────────────────────────────────────────────
+  mysql-rating:
+    image: mysql:8.0
+    container_name: mysql-rating
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_ratings
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_rating_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Analysis Service (Django + Stockfish) ────────────────────────────────────
+  analysis-service:
+    build:
+      context: ./analysis-service
+      target: builder
+    container_name: analysis-service
+    ports:
+      - "8002:8002"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DEBUG=True
+      - DATABASE_URL=mysql://root:rootpassword@mysql-analysis:3306/gameplatform_analysis
+      - REDIS_URL=redis://redis:6379/5
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/6
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+      - STOCKFISH_PATH=/usr/games/stockfish
+    volumes:
+      - ./analysis-service:/app
+    depends_on:
+      mysql-analysis:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8002
+    networks:
+      - platform-network
+
+  # ─── MySQL: Analysis ────────────────────────────────────────────────────────
+  mysql-analysis:
+    image: mysql:8.0
+    container_name: mysql-analysis
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_analysis
+    ports:
+      - "3310:3306"
+    volumes:
+      - mysql_analysis_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Chat Service (Node + Socket.IO + MongoDB) ────────────────────────────────
+  chat-service:
+    build:
+      context: ./chat-service
+    container_name: chat-service
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+      - PORT=3004
+      - MONGODB_URI=mongodb://mongodb:27017/chess_chat
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - USER_SERVICE_URL=http://user-service:8000
+      - GAME_SERVICE_URL=http://game-service:3003
+      - CLIENT_URL=http://localhost:5173
+    volumes:
+      - ./chat-service/src:/app/src
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - platform-network
+
+  # ─── Notification Service (Django + FCM push) ─────────────────────────────────
+  notification-service:
+    build:
+      context: ./notification-service
+      target: builder
+    container_name: notification-service
+    ports:
+      - "8003:8003"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DEBUG=True
+      - DATABASE_URL=mysql://root:rootpassword@mysql-notification:3306/gameplatform_notifications
+      - REDIS_URL=redis://redis:6379/7
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/8
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+    volumes:
+      - ./notification-service:/app
+    depends_on:
+      mysql-notification:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8003
+    networks:
+      - platform-network
+
+  # ─── MySQL: Notification ──────────────────────────────────────────────────────
+  mysql-notification:
+    image: mysql:8.0
+    container_name: mysql-notification
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_notifications
+    ports:
+      - "3311:3306"
+    volumes:
+      - mysql_notification_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Tournament Service (Django + Swiss / Round-Robin) ──────────────────────────
+  tournament-service:
+    build:
+      context: ./tournament-service
+      target: builder
+    container_name: tournament-service
+    ports:
+      - "8004:8004"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DEBUG=True
+      - DATABASE_URL=mysql://root:rootpassword@mysql-tournament:3306/gameplatform_tournaments
+      - REDIS_URL=redis://redis:6379/9
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/10
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+    volumes:
+      - ./tournament-service:/app
+    depends_on:
+      mysql-tournament:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8004
+    networks:
+      - platform-network
+
+  # ─── MySQL: Tournament ──────────────────────────────────────────────────────────
+  mysql-tournament:
+    image: mysql:8.0
+    container_name: mysql-tournament
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_tournaments
+    ports:
+      - "3312:3306"
+    volumes:
+      - mysql_tournament_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Forum/Blog Service (Laravel + MySQL) ──────────────────────────────────────
+  forum-service:
+    build:
+      context: ./forum-service
+    container_name: forum-service
+    ports:
+      - "8005:8005"
+    environment:
+      - APP_ENV=development
+      - APP_DEBUG=true
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql-forum
+      - DB_PORT=3306
+      - DB_DATABASE=gameplatform_forum
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+    volumes:
+      - ./forum-service:/app
+    depends_on:
+      mysql-forum:
+        condition: service_healthy
+    command: php artisan serve --host=0.0.0.0 --port=8005
+    networks:
+      - platform-network
+
+  # ─── MySQL: Forum ───────────────────────────────────────────────────────────────
+  mysql-forum:
+    image: mysql:8.0
+    container_name: mysql-forum
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_forum
+    ports:
+      - "3313:3306"
+    volumes:
+      - mysql_forum_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Admin Dashboard Service (Laravel + MySQL) ─────────────────────────────────
+  admin-service:
+    build:
+      context: ./admin-service
+    container_name: admin-service
+    ports:
+      - "8006:8006"
+    environment:
+      - APP_ENV=development
+      - APP_DEBUG=true
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql-admin
+      - DB_PORT=3306
+      - DB_DATABASE=gameplatform_admin
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+    volumes:
+      - ./admin-service:/app
+    depends_on:
+      mysql-admin:
+        condition: service_healthy
+    command: php artisan serve --host=0.0.0.0 --port=8006
+    networks:
+      - platform-network
+
+  # ─── MySQL: Admin ───────────────────────────────────────────────────────────────
+  mysql-admin:
+    image: mysql:8.0
+    container_name: mysql-admin
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_admin
+    ports:
+      - "3314:3306"
+    volumes:
+      - mysql_admin_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── MongoDB ─────────────────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: platform-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: platform-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+volumes:
+  mysql_auth_data:
+  mysql_user_data:
+  mysql_rating_data:
+  mysql_analysis_data:
+  mongodb_data:
+  redis_data:
+  mysql_notification_data:
+  mysql_tournament_data:
+  mysql_forum_data:
+  mysql_admin_data:
+
+networks:
+  platform-network:
+    driver: bridge

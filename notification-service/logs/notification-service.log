@@ -1,0 +1,256 @@
+ERROR 2026-05-25 16:21:31,505 exceptions Unhandled exception: property 'is_authenticated' of 'AnonymousUser' object has no setter
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 14, in authenticate
+    return self._build_user(user_id, user_email, user_role), None
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 38, in _build_user
+    u.is_authenticated = True
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: property 'is_authenticated' of 'AnonymousUser' object has no setter
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 414, in initial
+    self.perform_authentication(request)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 324, in perform_authentication
+    request.user
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 230, in user
+    with wrap_attributeerrors():
+         ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 78, in wrap_attributeerrors
+    raise exc.with_traceback(info[2])
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 14, in authenticate
+    return self._build_user(user_id, user_email, user_role), None
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 38, in _build_user
+    u.is_authenticated = True
+    ^^^^^^^^^^^^^^^^^^
+rest_framework.request.WrappedAttributeError: property 'is_authenticated' of 'AnonymousUser' object has no setter
+ERROR 2026-05-25 16:21:31,528 log Internal Server Error: /api/notifications/notifications/
+ERROR 2026-05-25 16:21:31,822 exceptions Unhandled exception: property 'is_authenticated' of 'AnonymousUser' object has no setter
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 14, in authenticate
+    return self._build_user(user_id, user_email, user_role), None
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 38, in _build_user
+    u.is_authenticated = True
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: property 'is_authenticated' of 'AnonymousUser' object has no setter
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 414, in initial
+    self.perform_authentication(request)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 324, in perform_authentication
+    request.user
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 230, in user
+    with wrap_attributeerrors():
+         ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 78, in wrap_attributeerrors
+    raise exc.with_traceback(info[2])
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 14, in authenticate
+    return self._build_user(user_id, user_email, user_role), None
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 38, in _build_user
+    u.is_authenticated = True
+    ^^^^^^^^^^^^^^^^^^
+rest_framework.request.WrappedAttributeError: property 'is_authenticated' of 'AnonymousUser' object has no setter
+ERROR 2026-05-25 16:21:31,827 log Internal Server Error: /api/notifications/notifications/unread_count/
+ERROR 2026-05-25 16:21:31,839 exceptions Unhandled exception: property 'is_authenticated' of 'AnonymousUser' object has no setter
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 14, in authenticate
+    return self._build_user(user_id, user_email, user_role), None
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 38, in _build_user
+    u.is_authenticated = True
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: property 'is_authenticated' of 'AnonymousUser' object has no setter
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 414, in initial
+    self.perform_authentication(request)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 324, in perform_authentication
+    request.user
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 230, in user
+    with wrap_attributeerrors():
+         ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 78, in wrap_attributeerrors
+    raise exc.with_traceback(info[2])
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 14, in authenticate
+    return self._build_user(user_id, user_email, user_role), None
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 38, in _build_user
+    u.is_authenticated = True
+    ^^^^^^^^^^^^^^^^^^
+rest_framework.request.WrappedAttributeError: property 'is_authenticated' of 'AnonymousUser' object has no setter
+ERROR 2026-05-25 16:21:31,843 log Internal Server Error: /api/notifications/notifications/1/read/
+ERROR 2026-05-25 16:21:31,858 exceptions Unhandled exception: property 'is_authenticated' of 'AnonymousUser' object has no setter
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 14, in authenticate
+    return self._build_user(user_id, user_email, user_role), None
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 38, in _build_user
+    u.is_authenticated = True
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: property 'is_authenticated' of 'AnonymousUser' object has no setter
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 414, in initial
+    self.perform_authentication(request)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 324, in perform_authentication
+    request.user
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 230, in user
+    with wrap_attributeerrors():
+         ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 78, in wrap_attributeerrors
+    raise exc.with_traceback(info[2])
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 14, in authenticate
+    return self._build_user(user_id, user_email, user_role), None
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 38, in _build_user
+    u.is_authenticated = True
+    ^^^^^^^^^^^^^^^^^^
+rest_framework.request.WrappedAttributeError: property 'is_authenticated' of 'AnonymousUser' object has no setter
+ERROR 2026-05-25 16:21:31,862 log Internal Server Error: /api/notifications/notifications/read_all/
+ERROR 2026-05-25 16:21:31,876 exceptions Unhandled exception: property 'is_authenticated' of 'AnonymousUser' object has no setter
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 14, in authenticate
+    return self._build_user(user_id, user_email, user_role), None
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 38, in _build_user
+    u.is_authenticated = True
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: property 'is_authenticated' of 'AnonymousUser' object has no setter
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 414, in initial
+    self.perform_authentication(request)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\views.py", line 324, in perform_authentication
+    request.user
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 230, in user
+    with wrap_attributeerrors():
+         ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 78, in wrap_attributeerrors
+    raise exc.with_traceback(info[2])
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python314\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 14, in authenticate
+    return self._build_user(user_id, user_email, user_role), None
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\chess-app-api\notification-service\common\auth.py", line 38, in _build_user
+    u.is_authenticated = True
+    ^^^^^^^^^^^^^^^^^^
+rest_framework.request.WrappedAttributeError: property 'is_authenticated' of 'AnonymousUser' object has no setter
+ERROR 2026-05-25 16:21:31,880 log Internal Server Error: /api/notifications/notifications/
+WARNING 2026-05-25 16:21:31,892 log Forbidden: /api/notifications/internal/send
