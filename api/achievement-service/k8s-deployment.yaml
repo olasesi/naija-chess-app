@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: achievement-service
+  labels:
+    app: achievement-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: achievement-service
+  template:
+    metadata:
+      labels:
+        app: achievement-service
+    spec:
+      containers:
+      - name: achievement-service
+        image: chess-app-api/achievement-service:latest
+        ports:
+        - containerPort: 8008
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: "config.settings.production"
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: achievement-secrets
+              key: django-secret-key
+        - name: JWT_ACCESS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secrets
+              key: access-secret
+        - name: MYSQL_DATABASE
+          value: "gameplatform_achievements"
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: user
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: password
+        - name: MYSQL_HOST
+          value: "mysql-achievement"
+        - name: MYSQL_PORT
+          value: "3306"
+        - name: REDIS_URL
+          value: "redis://redis:6379/12"
+        - name: CELERY_BROKER_URL
+          value: "redis://redis:6379/12"
+        - name: CELERY_RESULT_BACKEND
+          value: "redis://redis:6379/12"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health/
+            port: 8008
+          initialDelaySeconds: 30
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health/
+            port: 8008
+          initialDelaySeconds: 15
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: achievement-service
+spec:
+  selector:
+    app: achievement-service
+  ports:
+  - port: 8008
+    targetPort: 8008
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: achievement-service-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: achievement-service
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anticheat-service
+  labels:
+    app: anticheat-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: anticheat-service
+  template:
+    metadata:
+      labels:
+        app: anticheat-service
+    spec:
+      containers:
+      - name: anticheat-service
+        image: chess-app-api/anticheat-service:latest
+        ports:
+        - containerPort: 8009
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: "config.settings.production"
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: anticheat-secrets
+              key: django-secret-key
+        - name: JWT_ACCESS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secrets
+              key: access-secret
+        - name: MYSQL_DATABASE
+          value: "gameplatform_anticheat"
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: user
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: password
+        - name: MYSQL_HOST
+          value: "mysql-anticheat"
+        - name: MYSQL_PORT
+          value: "3306"
+        - name: REDIS_URL
+          value: "redis://redis:6379/13"
+        - name: CELERY_BROKER_URL
+          value: "redis://redis:6379/13"
+        - name: CELERY_RESULT_BACKEND
+          value: "redis://redis:6379/13"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health/
+            port: 8009
+          initialDelaySeconds: 30
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health/
+            port: 8009
+          initialDelaySeconds: 15
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: anticheat-service
+spec:
+  selector:
+    app: anticheat-service
+  ports:
+  - port: 8009
+    targetPort: 8009
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: anticheat-service-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: anticheat-service
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

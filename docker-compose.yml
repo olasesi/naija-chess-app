@@ -4,7 +4,7 @@ services:
   # ─── API Gateway ────────────────────────────────────────────────────────────
   api-gateway:
     build:
-      context: ./api-gateway
+      context: ./api/api-gateway
       target: builder
     container_name: api-gateway
     ports:
@@ -22,9 +22,13 @@ services:
       - TOURNAMENT_SERVICE_URL=http://tournament-service:8004
       - FORUM_SERVICE_URL=http://forum-service:8005
       - ADMIN_SERVICE_URL=http://admin-service:8006
+      - PUZZLE_SERVICE_URL=http://puzzle-service:8007
+      - ACHIEVEMENT_SERVICE_URL=http://achievement-service:8008
+      - ANTICHEAT_SERVICE_URL=http://anticheat-service:8009
+      - AI_SERVICE_URL=http://ai-service:8010
       - CLIENT_URL=http://localhost:5173
     volumes:
-      - ./api-gateway/src:/app/src
+      - ./api/api-gateway/src:/app/src
     depends_on:
       - auth-service
       - user-service
@@ -38,7 +42,7 @@ services:
   # ─── Auth Service ───────────────────────────────────────────────────────────
   auth-service:
     build:
-      context: ./auth-service
+      context: ./api/auth-service
       target: builder
     container_name: auth-service
     ports:
@@ -49,9 +53,9 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     env_file:
-      - ./auth-service/.env
+      - ./api/auth-service/.env
     volumes:
-      - ./auth-service/src:/app/src
+      - ./api/auth-service/src:/app/src
     depends_on:
       mysql-auth:
         condition: service_healthy
@@ -64,7 +68,7 @@ services:
   # ─── User Service (Django) ────────────────────────────────────────────────────
   user-service:
     build:
-      context: ./user-service
+      context: ./api/user-service
       target: builder
     container_name: user-service
     ports:
@@ -80,7 +84,7 @@ services:
       - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
       - AUTH_SERVICE_URL=http://auth-service:3001
     volumes:
-      - ./user-service:/app
+      - ./api/user-service:/app
     depends_on:
       mysql-user:
         condition: service_healthy
@@ -131,7 +135,7 @@ services:
   # ─── Game Service (Node + Socket.io) ─────────────────────────────────────────
   game-service:
     build:
-      context: ./game-service
+      context: ./api/game-service
       target: builder
     container_name: game-service
     ports:
@@ -146,9 +150,10 @@ services:
       - RATING_SERVICE_URL=http://rating-service:8001
       - CLIENT_URL=http://localhost:5173
     volumes:
-      - ./game-service/src:/app/src
+      - ./api/game-service/src:/app/src
     depends_on:
-      - rating-service
+      rating-service:
+        condition: service_started
       mongodb:
         condition: service_started
       redis:
@@ -160,7 +165,7 @@ services:
   # ─── Rating Service (Django + Glicko-2) ──────────────────────────────────────
   rating-service:
     build:
-      context: ./rating-service
+      context: ./api/rating-service
       target: builder
     container_name: rating-service
     ports:
@@ -175,7 +180,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/4
       - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
     volumes:
-      - ./rating-service:/app
+      - ./api/rating-service:/app
     depends_on:
       mysql-rating:
         condition: service_healthy
@@ -207,7 +212,7 @@ services:
   # ─── Analysis Service (Django + Stockfish) ────────────────────────────────────
   analysis-service:
     build:
-      context: ./analysis-service
+      context: ./api/analysis-service
       target: builder
     container_name: analysis-service
     ports:
@@ -223,7 +228,7 @@ services:
       - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
       - STOCKFISH_PATH=/usr/games/stockfish
     volumes:
-      - ./analysis-service:/app
+      - ./api/analysis-service:/app
     depends_on:
       mysql-analysis:
         condition: service_healthy
@@ -255,7 +260,7 @@ services:
   # ─── Chat Service (Node + Socket.IO + MongoDB) ────────────────────────────────
   chat-service:
     build:
-      context: ./chat-service
+      context: ./api/chat-service
     container_name: chat-service
     ports:
       - "3004:3004"
@@ -270,7 +275,7 @@ services:
       - GAME_SERVICE_URL=http://game-service:3003
       - CLIENT_URL=http://localhost:5173
     volumes:
-      - ./chat-service/src:/app/src
+      - ./api/chat-service/src:/app/src
     depends_on:
       mongodb:
         condition: service_healthy
@@ -283,7 +288,7 @@ services:
   # ─── Notification Service (Django + FCM push) ─────────────────────────────────
   notification-service:
     build:
-      context: ./notification-service
+      context: ./api/notification-service
       target: builder
     container_name: notification-service
     ports:
@@ -298,7 +303,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/8
       - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
     volumes:
-      - ./notification-service:/app
+      - ./api/notification-service:/app
     depends_on:
       mysql-notification:
         condition: service_healthy
@@ -330,7 +335,7 @@ services:
   # ─── Tournament Service (Django + Swiss / Round-Robin) ──────────────────────────
   tournament-service:
     build:
-      context: ./tournament-service
+      context: ./api/tournament-service
       target: builder
     container_name: tournament-service
     ports:
@@ -345,7 +350,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/10
       - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
     volumes:
-      - ./tournament-service:/app
+      - ./api/tournament-service:/app
     depends_on:
       mysql-tournament:
         condition: service_healthy
@@ -377,7 +382,7 @@ services:
   # ─── Forum/Blog Service (Laravel + MySQL) ──────────────────────────────────────
   forum-service:
     build:
-      context: ./forum-service
+      context: ./api/forum-service
     container_name: forum-service
     ports:
       - "8005:8005"
@@ -392,7 +397,7 @@ services:
       - DB_PASSWORD=rootpassword
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
     volumes:
-      - ./forum-service:/app
+      - ./api/forum-service:/app
     depends_on:
       mysql-forum:
         condition: service_healthy
@@ -422,7 +427,7 @@ services:
   # ─── Admin Dashboard Service (Laravel + MySQL) ─────────────────────────────────
   admin-service:
     build:
-      context: ./admin-service
+      context: ./api/admin-service
     container_name: admin-service
     ports:
       - "8006:8006"
@@ -437,7 +442,7 @@ services:
       - DB_PASSWORD=rootpassword
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
     volumes:
-      - ./admin-service:/app
+      - ./api/admin-service:/app
     depends_on:
       mysql-admin:
         condition: service_healthy
@@ -456,6 +461,210 @@ services:
       - "3314:3306"
     volumes:
       - mysql_admin_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Puzzle Service (Django + MySQL) ──────────────────────────────────────────
+  puzzle-service:
+    build:
+      context: ./api/puzzle-service
+      target: builder
+    container_name: puzzle-service
+    ports:
+      - "8007:8007"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DJANGO_SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DJANGO_DEBUG=True
+      - MYSQL_DATABASE=gameplatform_puzzles
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=rootpassword
+      - MYSQL_HOST=mysql-puzzle
+      - MYSQL_PORT=3306
+      - REDIS_URL=redis://redis:6379/11
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/11
+      - CELERY_RESULT_BACKEND=redis://redis:6379/11
+    volumes:
+      - ./api/puzzle-service:/app
+    depends_on:
+      mysql-puzzle:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8007
+    networks:
+      - platform-network
+
+  # ─── MySQL: Puzzle ───────────────────────────────────────────────────────────
+  mysql-puzzle:
+    image: mysql:8.0
+    container_name: mysql-puzzle
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_puzzles
+    ports:
+      - "3315:3306"
+    volumes:
+      - mysql_puzzle_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Achievement Service (Django + MySQL) ─────────────────────────────────────
+  achievement-service:
+    build:
+      context: ./api/achievement-service
+      target: builder
+    container_name: achievement-service
+    ports:
+      - "8008:8008"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DJANGO_SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DJANGO_DEBUG=True
+      - MYSQL_DATABASE=gameplatform_achievements
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=rootpassword
+      - MYSQL_HOST=mysql-achievement
+      - MYSQL_PORT=3306
+      - REDIS_URL=redis://redis:6379/12
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/12
+      - CELERY_RESULT_BACKEND=redis://redis:6379/12
+    volumes:
+      - ./api/achievement-service:/app
+    depends_on:
+      mysql-achievement:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8008
+    networks:
+      - platform-network
+
+  # ─── MySQL: Achievement ──────────────────────────────────────────────────────
+  mysql-achievement:
+    image: mysql:8.0
+    container_name: mysql-achievement
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_achievements
+    ports:
+      - "3316:3306"
+    volumes:
+      - mysql_achievement_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── Anti-Cheat Service (Django + MySQL) ─────────────────────────────────────
+  anticheat-service:
+    build:
+      context: ./api/anticheat-service
+      target: builder
+    container_name: anticheat-service
+    ports:
+      - "8009:8009"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DJANGO_SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DJANGO_DEBUG=True
+      - MYSQL_DATABASE=gameplatform_anticheat
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=rootpassword
+      - MYSQL_HOST=mysql-anticheat
+      - MYSQL_PORT=3306
+      - REDIS_URL=redis://redis:6379/13
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/13
+      - CELERY_RESULT_BACKEND=redis://redis:6379/13
+    volumes:
+      - ./api/anticheat-service:/app
+    depends_on:
+      mysql-anticheat:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8009
+    networks:
+      - platform-network
+
+  # ─── MySQL: Anti-Cheat ───────────────────────────────────────────────────────
+  mysql-anticheat:
+    image: mysql:8.0
+    container_name: mysql-anticheat
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_anticheat
+    ports:
+      - "3317:3306"
+    volumes:
+      - mysql_anticheat_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-network
+
+  # ─── AI Service (Django + MySQL) ─────────────────────────────────────────────
+  ai-service:
+    build:
+      context: ./api/ai-service
+      target: builder
+    container_name: ai-service
+    ports:
+      - "8010:8010"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DJANGO_SECRET_KEY=dev-secret-key-do-not-use-in-prod
+      - DJANGO_DEBUG=True
+      - MYSQL_DATABASE=gameplatform_ai
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=rootpassword
+      - MYSQL_HOST=mysql-ai
+      - MYSQL_PORT=3306
+      - REDIS_URL=redis://redis:6379/14
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - CELERY_BROKER_URL=redis://redis:6379/14
+      - CELERY_RESULT_BACKEND=redis://redis:6379/14
+    volumes:
+      - ./api/ai-service:/app
+    depends_on:
+      mysql-ai:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8010
+    networks:
+      - platform-network
+
+  # ─── MySQL: AI ───────────────────────────────────────────────────────────────
+  mysql-ai:
+    image: mysql:8.0
+    container_name: mysql-ai
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gameplatform_ai
+    ports:
+      - "3318:3306"
+    volumes:
+      - mysql_ai_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -507,6 +716,10 @@ volumes:
   mysql_tournament_data:
   mysql_forum_data:
   mysql_admin_data:
+  mysql_puzzle_data:
+  mysql_achievement_data:
+  mysql_anticheat_data:
+  mysql_ai_data:
 
 networks:
   platform-network:

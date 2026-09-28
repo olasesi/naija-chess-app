@@ -1,0 +1,162 @@
+[
+  {
+    "fen": "6k1/5ppp/8/8/8/8/5PPP/R5K1 w - - 0 1",
+    "solution": [{"from": "a1", "to": "a8"}],
+    "rating": 800,
+    "difficulty": "EASY",
+    "themes": ["back-rank", "mate-in-1"],
+    "title": "Back rank mate in 1"
+  },
+  {
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
+    "solution": [{"from": "f3", "to": "f7"}],
+    "rating": 1100,
+    "difficulty": "EASY",
+    "themes": ["queen-attack", "mate-in-1"],
+    "title": "Scholar's mate finish"
+  },
+  {
+    "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 0 1",
+    "solution": [{"from": "d8", "to": "h4"}],
+    "rating": 900,
+    "difficulty": "EASY",
+    "themes": ["queen-hunt", "fork"],
+    "title": "Fool's mate"
+  },
+  {
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1",
+    "solution": [{"from": "c4", "to": "f7"}, {"from": "e7", "to": "f7"}, {"from": "c4", "to": "g8"}],
+    "rating": 1400,
+    "difficulty": "MEDIUM",
+    "themes": ["fork", "attacking-king"],
+    "title": "Knight fork on f7"
+  },
+  {
+    "fen": "2r3k1/5ppp/8/8/8/8/5PPP/2R3K1 w - - 0 1",
+    "solution": [{"from": "c1", "to": "c8"}, {"from": "g8", "to": "h7"}, {"from": "c8", "to": "g8"}],
+    "rating": 1500,
+    "difficulty": "MEDIUM",
+    "themes": ["back-rank", "skewer"],
+    "title": "Rook skewer on the back rank"
+  },
+  {
+    "fen": "r5rk/5p1p/5B2/4Q3/8/8/7P/6K1 w - - 0 1",
+    "solution": [{"from": "e5", "to": "e8"}],
+    "rating": 1600,
+    "difficulty": "MEDIUM",
+    "themes": ["back-rank", "queen-sacrifice", "mate-in-2"],
+    "title": "Queen sacrifice leads to mate"
+  },
+  {
+    "fen": "1k6/1p6/8/8/8/8/1P6/1K1R5 w - - 0 1",
+    "solution": [{"from": "d1", "to": "d8"}],
+    "rating": 700,
+    "difficulty": "EASY",
+    "themes": ["back-rank", "mate-in-1"],
+    "title": "Rook to the back rank"
+  },
+  {
+    "fen": "3rkr2/8/8/8/8/8/3R4/3KR3 w - - 0 1",
+    "solution": [{"from": "d2", "to": "d7"}, {"from": "e8", "to": "f8"}, {"from": "d7", "to": "d1"}],
+    "rating": 1800,
+    "difficulty": "HARD",
+    "themes": ["back-rank", "discovered-attack"],
+    "title": "Doubled rooks coordinate"
+  },
+  {
+    "fen": "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+    "solution": [{"from": "a4", "to": "e8"}],
+    "rating": 2200,
+    "difficulty": "EXPERT",
+    "themes": ["mate-in-3", "queen-sacrifice", "opera-mate"],
+    "title": "Morphy's Opera Game finish"
+  },
+  {
+    "fen": "2r3k1/1p3ppp/8/8/8/8/PPP2PPP/2R1R1K1 w - - 0 1",
+    "solution": [{"from": "e2", "to": "e8"}],
+    "rating": 1700,
+    "difficulty": "MEDIUM",
+    "themes": ["fork", "back-rank"],
+    "title": "Rook fork on the back rank"
+  },
+  {
+    "fen": "rnbqkb1r/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq - 0 1",
+    "solution": [{"from": "h7", "to": "h5"}],
+    "rating": 1000,
+    "difficulty": "EASY",
+    "themes": ["pawn-break", "tempo"],
+    "title": "Gain a tempo"
+  },
+  {
+    "fen": "6k1/5p1p/6p1/8/8/6P1/5P1P/6K1 w - - 0 1",
+    "solution": [{"from": "g4", "to": "g5"}],
+    "rating": 1300,
+    "difficulty": "MEDIUM",
+    "themes": ["pawn-structure", "breakthrough"],
+    "title": "Shoulder the opponent's pawns"
+  },
+  {
+    "fen": "r1b1k2r/ppppnppp/2n5/1B2q3/4P3/8/PPPP1PPP/RNBQ1RK1 w kq - 0 1",
+    "solution": [{"from": "c3", "to": "c4"}],
+    "rating": 1900,
+    "difficulty": "HARD",
+    "themes": ["fork", "queen-attack", "discovered-attack"],
+    "title": "Queen's Gambit tactic"
+  },
+  {
+    "fen": "4k3/8/4K3/8/8/4k3/8/4R3 w - - 0 1",
+    "solution": [{"from": "e1", "to": "e3"}],
+    "rating": 750,
+    "difficulty": "EASY",
+    "themes": ["opposition", "technique"],
+    "title": "Simple technique"
+  },
+  {
+    "fen": "r1b2rk1/pp3ppp/2n1p3/q7/3P4/2N1PN2/PP3PPP/R1BQ1RK1 w - - 0 1",
+    "solution": [{"from": "c3", "to": "a4"}],
+    "rating": 2000,
+    "difficulty": "HARD",
+    "themes": ["fork", "overloading"],
+    "title": "Knight fork wins material"
+  },
+  {
+    "fen": "2r3k1/pp1b1ppp/8/4p3/3NP3/1B6/PPP2PPP/4R1K1 w - - 0 1",
+    "solution": [{"from": "e4", "to": "c6"}],
+    "rating": 1950,
+    "difficulty": "HARD",
+    "themes": ["fork", "knight", "hanging-pieces"],
+    "title": "Knight fork"
+  },
+  {
+    "fen": "r1bq1rk1/pp2ppbp/2np1np1/8/2BNP3/2N1B3/PPP2PPP/R2QK2R w KQ - 0 1",
+    "solution": [{"from": "e3", "to": "g6"}],
+    "rating": 1850,
+    "difficulty": "HARD",
+    "themes": ["pin", "weak-squares"],
+    "title": "Exploit a pin"
+  },
+  {
+    "fen": "8/8/8/8/8/6k1/6p1/6K1 w - - 0 1",
+    "solution": [{"from": "g1", "to": "h1"}],
+    "rating": 650,
+    "difficulty": "EASY",
+    "themes": ["opposition", "king-endgame"],
+    "title": "King endgame opposition"
+  },
+  {
+    "fen": "r2q1rk1/pp1nbppp/2p1bn2/3p4/3P4/2NBPN2/PP3PPP/R1BQ1RK1 w - - 0 1",
+    "solution": [{"from": "e3", "to": "h6"}],
+    "rating": 2100,
+    "difficulty": "EXPERT",
+    "themes": ["pin", "attack", "knight"],
+    "title": "Crushing the king"
+  },
+  {
+    "fen": "6k1/pp4p1/2p5/2bp4/8/P5Pb/1P3rrP/2BRRN1K b - - 0 1",
+    "solution": [{"from": "g2", "to": "g1"}],
+    "rating": 2400,
+    "difficulty": "EXPERT",
+    "themes": ["back-rank", "combination", "deflection"],
+    "title": "Sacrifice for the back rank"
+  }
+]

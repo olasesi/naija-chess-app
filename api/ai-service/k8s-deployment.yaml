@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-service
+  namespace: chess
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-service
+  template:
+    metadata:
+      labels:
+        app: ai-service
+    spec:
+      containers:
+        - name: ai-service
+          image: chess-app/ai-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8010
+          envFrom:
+            - secretRef:
+                name: chess-secrets
+          env:
+            - name: MYSQL_HOST
+              value: mysql-ai
+            - name: MYSQL_DATABASE
+              value: gameplatform_ai
+            - name: REDIS_URL
+              value: redis://redis:6379/14
+            - name: DJANGO_SETTINGS_MODULE
+              value: config.settings.production
+          readinessProbe:
+            httpGet:
+              path: /api/health/
+              port: 8010
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health/
+              port: 8010
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-service
+  namespace: chess
+spec:
+  selector:
+    app: ai-service
+  ports:
+    - port: 8010
+      targetPort: 8010
+---
